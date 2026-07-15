@@ -13,7 +13,7 @@ To set up this project locally, follow these steps:
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/Ekazadex/Flyrank-Frontend-AI-Capstone.git
 
 # Install dependencies
 npm install
