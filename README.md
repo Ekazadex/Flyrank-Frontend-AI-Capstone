@@ -1,10 +1,25 @@
 # FlyRank Capstone Project - Frontend AI Engineering
 
-This is my repository for the Frontend AI Engineering track capstone project at FlyRank.
+Welcome to the official repository for my Frontend AI Engineering capstone project at FlyRank. This project focuses on integrating modern AI workflows into frontend architectures.
 
-## Tech Stack
-- Next.js
-- Tailwind CSS
+## 🚀 Tech Stack & Tooling
+- **Framework:** Next.js 15 (App Router)
+- **Styling:** Tailwind CSS
+- **Language:** TypeScript
+- **AI Toolchain:** Cursor IDE (Default Environment)
 
-## Setup
-Run `npm install` to install dependencies.
+## 🛠️ Getting Started
+To set up this project locally, follow these steps:
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+
+# Install dependencies
+npm install
+
+# Run the development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the app.
