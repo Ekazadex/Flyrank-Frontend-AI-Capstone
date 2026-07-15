@@ -1,0 +1,11 @@
+# Project Profile
+- Stack: Next.js (App Router), TypeScript, Tailwind CSS
+- Track: Frontend AI Engineering (FlyRank Internship Capstone)
+
+# AI Behavior Rules
+- Always use TypeScript with explicit types; avoid using 'any'.
+- Write clean, functional React components with proper modularization.
+- Follow Tailwind CSS best practices and avoid redundant utility classes.
+
+# Commit Standards
+- Whenever suggesting git actions, always enforce the Conventional Commits 1.0.0 specification.
