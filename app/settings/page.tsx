@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SettingsForm } from "@/components/settings/SettingsForm";
+import { SettingsFormValidated } from "@/components/SettingsFormValidated";
 
 export default function SettingsPage() {
   return (
@@ -22,7 +22,7 @@ export default function SettingsPage() {
             </p>
           </header>
 
-          <SettingsForm />
+          <SettingsFormValidated />
         </div>
       </div>
     </main>
