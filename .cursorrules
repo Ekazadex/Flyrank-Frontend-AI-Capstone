@@ -1,11 +1,17 @@
-# Project Profile
-- Stack: Next.js (App Router), TypeScript, Tailwind CSS
-- Track: Frontend AI Engineering (FlyRank Internship Capstone)
+# FlyRank Frontend AI Engineering - GitHub Copilot Custom Instructions
 
-# AI Behavior Rules
-- Always use TypeScript with explicit types; avoid using 'any'.
-- Write clean, functional React components with proper modularization.
-- Follow Tailwind CSS best practices and avoid redundant utility classes.
+## 1. Environment & Stack
+- Framework: Next.js 15 (App Router, React 19)
+- Language: TypeScript (Strict Mode enabled)
+- Styling: Tailwind CSS
+- Form Management: `react-hook-form` + `zod`
 
-# Commit Standards
-- Whenever suggesting git actions, always enforce the Conventional Commits 1.0.0 specification.
+## 2. Form & Data Validation Rules (Enforced via FE-03)
+- RULE_FORM_01: Uncontrolled form inputs are strictly prohibited. All forms MUST use `react-hook-form` bound with a `zod` schema resolver.
+- RULE_FORM_02: Never handle manual loading states with arbitrary `useState` flags when using forms. Always utilize `formState.isSubmitting` provided by `react-hook-form`.
+- RULE_FORM_03: Every interactive form element MUST supply explicit `aria-invalid`, `aria-describedby`, and `htmlFor` bindings for WCAG accessibility compliance.
+
+## 3. Engineering Quality Constraints
+- Always prefer modular component splitting over monolithic files (>150 lines should be refactored into sub-components).
+- Do NOT use explicit `any` types under any circumstances. Define strict interfaces or leverage Zod dynamic types (`z.infer`).
+- All automated commit suggestions MUST follow Conventional Commits 1.0.0 (`feat:`, `fix:`, `chore:`, `docs:`).
