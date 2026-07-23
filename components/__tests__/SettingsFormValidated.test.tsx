@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import React from "react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SettingsFormValidated } from "@/components/SettingsFormValidated";
 
@@ -18,8 +19,9 @@ describe("SettingsFormValidated", () => {
 
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
-    expect(await screen.findByText(/Full name must be at least 3 characters./i)).toBeInTheDocument();
-    expect(await screen.findByText(/Enter a valid email address./i)).toBeInTheDocument();
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByText(/Full name must be at least 3 characters./i)).toBeInTheDocument();
+    expect(within(alert).getByText(/Enter a valid email address./i)).toBeInTheDocument();
   });
 
   it("shows email validation error for invalid email", async () => {
@@ -31,7 +33,8 @@ describe("SettingsFormValidated", () => {
 
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
-    expect(await screen.findByText(/Enter a valid email address./i)).toBeInTheDocument();
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByText(/Enter a valid email address./i)).toBeInTheDocument();
   });
 
   it("accepts optional password when empty", async () => {
@@ -56,8 +59,9 @@ describe("SettingsFormValidated", () => {
 
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
+    const alert = await screen.findByRole("alert");
     expect(
-      await screen.findByText(/Password must be at least 8 characters and include one uppercase letter and one number./i)
+      within(alert).getByText(/Password must be at least 8 characters and include one uppercase letter and one number./i)
     ).toBeInTheDocument();
   });
 });
