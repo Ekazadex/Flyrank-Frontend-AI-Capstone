@@ -11,6 +11,14 @@
 - `/settings` — Profile & Security Settings Placeholder
 - `/health` — Server Data Fetching Health-Check Page (JSONPlaceholder integration)
 
+## ♿ FE-05 Accessible Components
+- `/playground` — Modal, Tabs, Disclosure components with full keyboard accessibility
+  - **Modal Dialog:** Focus trap, Escape close, focus restoration
+  - **Tabs:** Arrow key navigation, Home/End jump, roving tabindex
+  - **Disclosure:** Space/Enter toggle, aria-expanded state
+  - **Testing:** Keyboard-only (no mouse) navigation and screen reader support
+  - **Analysis:** See `NOTES.md` for gap analysis vs. production libraries
+
 ## 🛠️ Tech Stack
 - **Framework:** Next.js 16.2.12 (App Router, Turbopack)
 - **React:** 19.2.8
