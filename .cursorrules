@@ -15,3 +15,8 @@
 - Always prefer modular component splitting over monolithic files (>150 lines should be refactored into sub-components).
 - Do NOT use explicit `any` types under any circumstances. Define strict interfaces or leverage Zod dynamic types (`z.infer`).
 - All automated commit suggestions MUST follow Conventional Commits 1.0.0 (`feat:`, `fix:`, `chore:`, `docs:`).
+
+## FE-04 Next.js Routing & Deployment Rules
+- RULE_ROUTE_01: Always use Next.js App Router Server Components by default. Only add `"use client"` directive when interactivity (React hooks, onClick handlers) is strictly required.
+- RULE_ROUTE_02: All page components MUST be fully responsive across mobile (375px) and desktop (1280px) viewports using Tailwind utility classes (`sm:`, `md:`, `lg:`).
+- RULE_ENV_01: Never hardcode sensitive API keys or credentials directly into code or repo files. Always leverage `process.env` and Vercel Environment Variables.
