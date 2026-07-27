@@ -12,10 +12,11 @@
 - `/health` — Server Data Fetching Health-Check Page (JSONPlaceholder integration)
 
 ## 🛠️ Tech Stack
-- **Framework:** Next.js 15 (App Router, React 19)
-- **Styling:** Tailwind CSS
-- **Language:** TypeScript
-- **Deployment Target:** Vercel
+- **Framework:** Next.js 16.2.12 (App Router, Turbopack)
+- **React:** 19.2.8
+- **Styling:** Tailwind CSS 3.4.14
+- **Language:** TypeScript (Strict Mode)
+- **Deployment:** Vercel with GitHub integration
 
 ## ⚙️ Getting Started Locally
 To set up and run this project locally:

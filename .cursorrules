@@ -1,10 +1,12 @@
 # FlyRank Frontend AI Engineering - GitHub Copilot Custom Instructions
 
 ## 1. Environment & Stack
-- Framework: Next.js 15 (App Router, React 19)
+- Framework: Next.js 16.2.12 (App Router, Turbopack)
+- React: 19.2.8
 - Language: TypeScript (Strict Mode enabled)
-- Styling: Tailwind CSS
+- Styling: Tailwind CSS 3.4.14
 - Form Management: `react-hook-form` + `zod`
+- Deployment: Vercel with GitHub integration and CI/CD
 
 ## 2. Form & Data Validation Rules (Enforced via FE-03)
 - RULE_FORM_01: Uncontrolled form inputs are strictly prohibited. All forms MUST use `react-hook-form` bound with a `zod` schema resolver.

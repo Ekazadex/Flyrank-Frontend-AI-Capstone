@@ -17,7 +17,7 @@ export function SiteNav() {
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white">
             FR
           </span>
-          <span>FlyRank Studio</span>
+          <span>FlyRank AI</span>
         </Link>
         <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
           {navItems.map((item) => (
