@@ -10,6 +10,7 @@ const navItems = [
   { href: '/insights', label: 'Insights' },
   { href: '/settings', label: 'Settings' },
   { href: '/health', label: 'Health' },
+  { href: '/playground', label: 'Playground (FE-05)' },
 ];
 
 export function SiteNav() {
