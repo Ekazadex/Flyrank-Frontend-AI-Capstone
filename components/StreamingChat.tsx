@@ -8,7 +8,8 @@ import React, {
   type FormEvent,
   type KeyboardEvent,
 } from 'react';
-import { useChat, type Message } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport, type UIMessage } from 'ai';
 import ReactMarkdown from 'react-markdown';
 import {
   Sparkles,
@@ -26,7 +27,7 @@ import {
   Terminal,
 } from 'lucide-react';
 import type { ChatSession, AppLanguage } from '@/types/chat';
-import { I18N_DICTIONARY } from '@/types/chat';
+import { getMessageText, I18N_DICTIONARY } from '@/types/chat';
 
 function preprocessStreamingMarkdown(rawContent: string): string {
   if (!rawContent) return '';
@@ -41,7 +42,7 @@ function preprocessStreamingMarkdown(rawContent: string): string {
 interface StreamingChatProps {
   session: ChatSession;
   lang: AppLanguage;
-  onUpdateSessionMessages: (sessionId: string, messages: Message[]) => void;
+  onUpdateSessionMessages: (sessionId: string, messages: UIMessage[]) => void;
 }
 
 export default function StreamingChat({
@@ -59,23 +60,24 @@ export default function StreamingChat({
   const isPinnedRef = useRef<boolean>(true);
   const [showJumpToBottom, setShowJumpToBottom] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [input, setInput] = useState('');
 
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
+    sendMessage,
+    status,
     stop,
-    reload,
+    regenerate,
     error,
   } = useChat({
-    initialMessages: session.messages,
     id: session.id,
-    onFinish: (completedMessage) => {
-      onUpdateSessionMessages(session.id, [...messages, completedMessage]);
+    messages: session.messages,
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
+    onFinish: ({ messages: completedMessages }) => {
+      onUpdateSessionMessages(session.id, completedMessages);
     },
   });
+  const isLoading = status === 'submitted' || status === 'streaming';
 
   // Robust Auto-Scroll: Track scroll position with strict 50px buffer threshold
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
@@ -104,9 +106,12 @@ export default function StreamingChat({
 
   // Submit handler: re-activates bottom pin for fresh queries
   const onFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     isPinnedRef.current = true;
     setShowJumpToBottom(false);
-    handleSubmit(e);
+    if (!input.trim() || isLoading) return;
+    void sendMessage({ text: input });
+    setInput('');
   };
 
   // Stop button handler: halts stream, persists partial message, re-enables textarea instantly
@@ -127,7 +132,7 @@ export default function StreamingChat({
 
   // Thinking indicator condition: active ONLY before the first assistant token arrives
   const isThinking =
-    isLoading &&
+    status === 'submitted' &&
     messages.length > 0 &&
     messages[messages.length - 1].role === 'user';
 
@@ -172,10 +177,7 @@ export default function StreamingChat({
                     key={idx}
                     type="button"
                     onClick={() => {
-                      const pseudoEvent = {
-                        target: { value: promptText },
-                      } as unknown as React.ChangeEvent<HTMLTextAreaElement>;
-                      handleInputChange(pseudoEvent);
+                      setInput(promptText);
                       textareaRef.current?.focus();
                     }}
                     className="p-3.5 rounded-xl bg-[#0E121E] hover:bg-[#161C2E] border border-[#1C2337] hover:border-indigo-500/50 text-xs text-slate-200 text-left transition-all hover:translate-y-[-1px] group flex flex-col justify-between shadow-sm"
@@ -224,11 +226,11 @@ export default function StreamingChat({
                     }`}
                   >
                     {isUser ? (
-                      <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      <p className="whitespace-pre-wrap leading-relaxed">{getMessageText(message)}</p>
                     ) : (
                       <div className="prose prose-invert prose-sm sm:prose-base max-w-none break-words leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_code]:font-mono [&_code]:text-indigo-300 [&_code]:bg-[#141926] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_pre]:bg-[#07090E] [&_pre]:border [&_pre]:border-[#1B2133] [&_pre]:p-3 [&_pre]:rounded-xl">
                         <ReactMarkdown>
-                          {preprocessStreamingMarkdown(message.content)}
+                          {preprocessStreamingMarkdown(getMessageText(message))}
                         </ReactMarkdown>
                       </div>
                     )}
@@ -253,7 +255,7 @@ export default function StreamingChat({
                         <div className="flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
-                            onClick={() => handleCopy(message.id, message.content)}
+                            onClick={() => handleCopy(message.id, getMessageText(message))}
                             title={t.copy}
                             aria-label={t.copy}
                             className="hover:text-slate-200 p-1 rounded hover:bg-slate-800/60 transition-colors flex items-center gap-1"
@@ -271,7 +273,7 @@ export default function StreamingChat({
                           {isLastMessage && !isLoading && (
                             <button
                               type="button"
-                              onClick={() => reload()}
+                              onClick={() => regenerate()}
                               title={t.retry}
                               aria-label={t.retry}
                               className="hover:text-slate-200 p-1 rounded hover:bg-slate-800/60 transition-colors flex items-center gap-1"
@@ -325,7 +327,7 @@ export default function StreamingChat({
             </div>
             <button
               type="button"
-              onClick={() => reload()}
+              onClick={() => regenerate()}
               className="px-3 py-1 rounded-lg bg-red-900/60 hover:bg-red-800 text-red-200 text-xs font-medium transition-colors"
             >
               {t.tryAgain}
@@ -361,7 +363,7 @@ export default function StreamingChat({
               <textarea
                 ref={textareaRef}
                 value={input}
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();

@@ -1,11 +1,17 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 
 export interface ChatSession {
   id: string;
   title: string;
   createdAt: number;
   updatedAt: number;
-  messages: Message[];
+  messages: UIMessage[];
+}
+
+export function getMessageText(message: UIMessage): string {
+  return message.parts
+    .flatMap((part) => (part.type === 'text' ? [part.text] : []))
+    .join('');
 }
 
 export type AppLanguage = 'en' | 'id';

@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import StreamingChat from '@/components/StreamingChat';
 import type { ChatSession, AppLanguage } from '@/types/chat';
+import { getMessageText } from '@/types/chat';
 import {
   SESSIONS_STORAGE_KEY,
   ACTIVE_SESSION_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
   I18N_DICTIONARY,
 } from '@/types/chat';
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import {
   Plus,
   Terminal,
@@ -48,6 +49,27 @@ function formatRelativeTime(timestamp: number, lang: AppLanguage): string {
   return `${days}d`;
 }
 
+function normalizeSessionMessages(messages: unknown): UIMessage[] {
+  if (!Array.isArray(messages)) return [];
+
+  return messages.flatMap((message, index) => {
+    if (!message || typeof message !== 'object') return [];
+    const candidate = message as Record<string, unknown>;
+    if (!['system', 'user', 'assistant'].includes(String(candidate.role))) return [];
+
+    if (Array.isArray(candidate.parts) && typeof candidate.id === 'string') {
+      return [candidate as unknown as UIMessage];
+    }
+
+    const text = typeof candidate.content === 'string' ? candidate.content : '';
+    return [{
+      id: typeof candidate.id === 'string' ? candidate.id : `legacy-${index}`,
+      role: candidate.role as UIMessage['role'],
+      parts: [{ type: 'text', text }],
+    }];
+  });
+}
+
 export default function ChatPage() {
   const [lang, setLang] = useState<AppLanguage>(() => {
     if (typeof window === 'undefined') return 'id';
@@ -69,7 +91,12 @@ export default function ChatPage() {
       const stored = localStorage.getItem(SESSIONS_STORAGE_KEY);
       if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.map((session) => ({
+            ...session,
+            messages: normalizeSessionMessages(session.messages),
+          }));
+        }
       }
     } catch {
       // fallback
@@ -150,7 +177,7 @@ export default function ChatPage() {
 
   // Callback to update messages for a specific session with strict bailout guard
   const handleUpdateSessionMessages = useCallback(
-    (sessionId: string, newMessages: Message[]) => {
+    (sessionId: string, newMessages: UIMessage[]) => {
       setSessions((prev) => {
         const target = prev.find((s) => s.id === sessionId);
         if (!target) return prev;
@@ -162,7 +189,7 @@ export default function ChatPage() {
           target.messages.every(
             (m, i) =>
               m.id === newMessages[i]?.id &&
-              m.content === newMessages[i]?.content &&
+              getMessageText(m) === getMessageText(newMessages[i]) &&
               m.role === newMessages[i]?.role
           )
         ) {
@@ -180,10 +207,11 @@ export default function ChatPage() {
           newMessages.length > 0
         ) {
           const firstUserMsg = newMessages.find((m) => m.role === 'user');
-          if (firstUserMsg && firstUserMsg.content) {
+          const firstUserText = firstUserMsg ? getMessageText(firstUserMsg) : '';
+          if (firstUserText) {
             title =
-              firstUserMsg.content.slice(0, 32) +
-              (firstUserMsg.content.length > 32 ? '...' : '');
+              firstUserText.slice(0, 32) +
+              (firstUserText.length > 32 ? '...' : '');
           }
         }
 

@@ -1,11 +1,11 @@
-import { streamText } from 'ai';
+import { convertToModelMessages, streamText, type UIMessage } from 'ai';
 import { model, CAPSTONE_SYSTEM_PROMPT } from '@/lib/ai-config';
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages }: { messages: UIMessage[] } = await req.json();
 
     if (!Array.isArray(messages)) {
       return new Response(
@@ -17,10 +17,10 @@ export async function POST(req: Request) {
     const result = streamText({
       model,
       system: CAPSTONE_SYSTEM_PROMPT,
-      messages,
+      messages: await convertToModelMessages(messages),
     });
 
-    return result.toDataStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error('Streaming error in /api/chat:', error);
     return new Response(
