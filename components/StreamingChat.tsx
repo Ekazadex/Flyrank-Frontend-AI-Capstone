@@ -253,7 +253,7 @@ export default function StreamingChat({
                     {isUser ? (
                       <p className="whitespace-pre-wrap leading-relaxed">{getMessageText(message)}</p>
                     ) : (
-                      <div className="prose prose-invert prose-sm sm:prose-base max-w-none break-words leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                      <div className="prose prose-invert max-w-none break-words text-[15px] leading-7 text-slate-300 prose-headings:font-semibold prose-headings:text-slate-100 prose-h1:mb-3 prose-h1:mt-7 prose-h1:text-xl prose-h2:mb-3 prose-h2:mt-6 prose-h2:text-lg prose-h3:mb-2 prose-h3:mt-5 prose-h3:text-base prose-p:my-4 prose-strong:text-slate-100 prose-a:text-sky-300 prose-a:underline prose-a:decoration-sky-400/40 prose-a:underline-offset-2 prose-ul:my-4 prose-ol:my-4 prose-li:my-1.5 prose-li:marker:text-slate-500 prose-blockquote:border-l-sky-500 prose-blockquote:bg-slate-900/50 prose-blockquote:py-1 prose-blockquote:text-slate-300 prose-hr:border-slate-700 prose-code:before:content-none prose-code:after:content-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                         <ReactMarkdown
                           rehypePlugins={[rehypeHighlight]}
                           components={{
@@ -299,6 +299,39 @@ export default function StreamingChat({
                                     {children}
                                   </pre>
                                 </div>
+                              );
+                            },
+                            table({ children }) {
+                              return (
+                                <div className="not-prose my-5 w-full max-w-full overflow-x-auto rounded-lg border border-[#293247]">
+                                  <table className="m-0 min-w-[480px] w-full border-collapse text-left text-xs sm:text-sm">
+                                    {children}
+                                  </table>
+                                </div>
+                              );
+                            },
+                            thead({ children }) {
+                              return <thead className="bg-[#171e2c] text-slate-100">{children}</thead>;
+                            },
+                            th({ children }) {
+                              return (
+                                <th className="border-b border-[#354058] px-3 py-2.5 text-left font-semibold sm:px-4">
+                                  {children}
+                                </th>
+                              );
+                            },
+                            td({ children }) {
+                              return (
+                                <td className="max-w-[320px] border-b border-[#252d40] px-3 py-2.5 align-top leading-6 text-slate-300 sm:px-4">
+                                  {children}
+                                </td>
+                              );
+                            },
+                            tr({ children }) {
+                              return (
+                                <tr className="even:bg-[#10151f] last:[&>td]:border-b-0">
+                                  {children}
+                                </tr>
                               );
                             },
                           }}
