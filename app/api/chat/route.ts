@@ -5,10 +5,10 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      console.error('Missing GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY.');
+    if (!process.env.GROQ_API_KEY) {
+      console.error('Missing GROQ_API_KEY.');
       return Response.json(
-        { error: 'The AI service is not configured.' },
+        { error: 'Groq is not configured. Add GROQ_API_KEY in the deployment environment.' },
         { status: 500 }
       );
     }

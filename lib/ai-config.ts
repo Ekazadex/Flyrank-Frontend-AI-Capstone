@@ -1,15 +1,12 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGroq } from '@ai-sdk/groq';
 
-const apiKey =
-  typeof process !== 'undefined'
-    ? process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || ''
-    : '';
+const apiKey = process.env.GROQ_API_KEY || '';
 
-export const google = createGoogleGenerativeAI({
+export const groq = createGroq({
   apiKey,
 });
 
-export const model = google('gemini-3.8-flash');
+export const model = groq('openai/gpt-oss-120b');
 
 export const CAPSTONE_SYSTEM_PROMPT = `You are the "Universal Tech Companion", a versatile, brilliant, and approachable technical mentor and developer assistant created to empower engineers, students, and tech enthusiasts of all skill levels.
 
