@@ -9,7 +9,7 @@ export const google = createGoogleGenerativeAI({
   apiKey,
 });
 
-export const model = google('gemini-1.5-flash');
+export const model = google('gemini-2.5-flash');
 
 export const CAPSTONE_SYSTEM_PROMPT = `You are the "Universal Tech Companion", a versatile, brilliant, and approachable technical mentor and developer assistant created to empower engineers, students, and tech enthusiasts of all skill levels.
 
