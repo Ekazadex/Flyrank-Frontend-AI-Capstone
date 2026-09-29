@@ -71,61 +71,68 @@ function normalizeSessionMessages(messages: unknown): UIMessage[] {
 }
 
 export default function ChatPage() {
-  const [lang, setLang] = useState<AppLanguage>(() => {
-    if (typeof window === 'undefined') return 'id';
-    try {
-      const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-      if (stored === 'en' || stored === 'id') return stored;
-    } catch {
-      // fallback
-    }
-    return 'id';
-  });
+  const [lang, setLang] = useState<AppLanguage>('id');
 
   const t = I18N_DICTIONARY[lang];
 
-  // Load sessions: allow 0 sessions if user cleared all
-  const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    if (typeof window === 'undefined') return [createNewSession('id')];
-    try {
-      const stored = localStorage.getItem(SESSIONS_STORAGE_KEY);
-      if (stored !== null) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed.map((session) => ({
-            ...session,
-            messages: normalizeSessionMessages(session.messages),
-          }));
-        }
-      }
-    } catch {
-      // fallback
-    }
-    return [createNewSession('id')];
-  });
-
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => {
-    if (typeof window === 'undefined') return sessions[0]?.id || '';
-    try {
-      const savedActive = localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
-      if (savedActive && sessions.some((s) => s.id === savedActive)) {
-        return savedActive;
-      }
-    } catch {
-      // fallback
-    }
-    return sessions[0]?.id || '';
-  });
-
-  // Sidebar visibility: open by default on desktop/tablet, hidden on mobile
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return window.innerWidth >= 768;
-  });
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+
+  useEffect(() => {
+    let restoredSessions: ChatSession[] = [];
+    let hasStoredSessionList = false;
+
+    try {
+      const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+      if (storedLanguage === 'en' || storedLanguage === 'id') {
+        setLang(storedLanguage);
+      }
+
+      const storedSessions = localStorage.getItem(SESSIONS_STORAGE_KEY);
+      if (storedSessions !== null) {
+        const parsed: unknown = JSON.parse(storedSessions);
+        if (Array.isArray(parsed)) {
+          restoredSessions = parsed.flatMap((session) => {
+            if (!session || typeof session !== 'object' || typeof session.id !== 'string') {
+              return [];
+            }
+            return [{
+              ...session,
+              messages: normalizeSessionMessages(session.messages),
+            } as ChatSession];
+          });
+          hasStoredSessionList = true;
+        }
+      }
+    } catch {
+      restoredSessions = [];
+    }
+
+    if (!hasStoredSessionList) {
+      restoredSessions = [createNewSession('id')];
+    }
+
+    setSessions(restoredSessions);
+    try {
+      const savedActiveId = localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+      setActiveSessionId(
+        savedActiveId && restoredSessions.some((session) => session.id === savedActiveId)
+          ? savedActiveId
+          : restoredSessions[0]?.id || ''
+      );
+    } catch {
+      setActiveSessionId(restoredSessions[0]?.id || '');
+    }
+
+    setIsSidebarOpen(window.innerWidth >= 768);
+    setHasLoadedStorage(true);
+  }, []);
 
   // Keyboard shortcut Ctrl+B / Cmd+B to toggle sidebar
   useEffect(() => {
@@ -141,25 +148,25 @@ export default function ChatPage() {
 
   // Sync sessions to localStorage (saves even when empty array)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (hasLoadedStorage) {
       try {
         localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
       } catch (err) {
         console.error('Failed to sync sessions to localStorage:', err);
       }
     }
-  }, [sessions]);
+  }, [sessions, hasLoadedStorage]);
 
   // Sync activeSessionId to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (hasLoadedStorage) {
       try {
         localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
       } catch (err) {
         console.error('Failed to sync active session ID:', err);
       }
     }
-  }, [activeSessionId]);
+  }, [activeSessionId, hasLoadedStorage]);
 
   const activeSession =
     sessions.find((s) => s.id === activeSessionId) ||
@@ -294,7 +301,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="h-[100dvh] w-full bg-[#08090E] text-slate-100 flex overflow-hidden font-sans selection:bg-indigo-500/30">
+    <div className="h-[calc(100dvh-69px)] w-full bg-[#08090E] text-slate-100 flex overflow-hidden font-sans selection:bg-indigo-500/30">
       {/* Mobile Backdrop Overlay (< 768px) */}
       {isSidebarOpen && (
         <div
@@ -555,7 +562,7 @@ export default function ChatPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-sm transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.newChatShort}</span>
+              <span>{t.newChatShort}</span>
             </button>
           </div>
         </header>
