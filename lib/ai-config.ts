@@ -1,5 +1,7 @@
+import 'server-only';
 import { createGroq } from '@ai-sdk/groq';
 
+// Keep provider credentials, model selection, and system instructions server-side.
 const apiKey = process.env.GROQ_API_KEY || '';
 
 export const groq = createGroq({

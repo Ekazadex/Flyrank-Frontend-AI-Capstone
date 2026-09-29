@@ -11,6 +11,8 @@ import React, {
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 import {
   Sparkles,
   User,
@@ -37,6 +39,21 @@ function preprocessStreamingMarkdown(rawContent: string): string {
     return `${rawContent}\n\`\`\``;
   }
   return rawContent;
+}
+
+function getNodeText(node: React.ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(getNodeText).join('');
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
+    return getNodeText(node.props.children);
+  }
+  return '';
+}
+
+function getCodeLanguage(children: React.ReactNode): string {
+  const codeElement = React.Children.toArray(children).find(React.isValidElement);
+  const className = (codeElement?.props as { className?: string } | undefined)?.className;
+  return className?.match(/language-([\w+-]+)/)?.[1] ?? 'code';
 }
 
 interface StreamingChatProps {
@@ -117,24 +134,28 @@ export default function StreamingChat({
   // Stop button handler: halts stream, persists partial message, re-enables textarea instantly
   const handleStop = () => {
     stop();
-    onUpdateSessionMessages(session.id, messages);
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 50);
   };
 
   // Copy message text to clipboard with feedback
-  const handleCopy = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCopy = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      setCopiedId(null);
+    }
   };
 
   // Thinking indicator condition: active ONLY before the first assistant token arrives
+  const lastMessage = messages[messages.length - 1];
   const isThinking =
-    status === 'submitted' &&
-    messages.length > 0 &&
-    messages[messages.length - 1].role === 'user';
+    isLoading &&
+    (lastMessage?.role === 'user' ||
+      (lastMessage?.role === 'assistant' && !getMessageText(lastMessage).trim()));
 
   return (
     <div className="relative flex flex-col h-full w-full bg-[#08090E] text-slate-100 overflow-hidden font-sans">
@@ -198,6 +219,10 @@ export default function StreamingChat({
               const isUser = message.role === 'user';
               const isLastMessage = index === messages.length - 1;
 
+              if (isThinking && !isUser && !getMessageText(message).trim()) {
+                return null;
+              }
+
               return (
                 <div
                   key={message.id || index}
@@ -228,8 +253,56 @@ export default function StreamingChat({
                     {isUser ? (
                       <p className="whitespace-pre-wrap leading-relaxed">{getMessageText(message)}</p>
                     ) : (
-                      <div className="prose prose-invert prose-sm sm:prose-base max-w-none break-words leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_code]:font-mono [&_code]:text-indigo-300 [&_code]:bg-[#141926] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_pre]:bg-[#07090E] [&_pre]:border [&_pre]:border-[#1B2133] [&_pre]:p-3 [&_pre]:rounded-xl">
-                        <ReactMarkdown>
+                      <div className="prose prose-invert prose-sm sm:prose-base max-w-none break-words leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <ReactMarkdown
+                          rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            code({ className, children, ...props }) {
+                              const isBlock = Boolean(className?.includes('language-'));
+                              return (
+                                <code
+                                  className={isBlock ? className : 'rounded bg-[#141926] px-1.5 py-0.5 font-mono text-indigo-200'}
+                                  {...props}
+                                >
+                                  {children}
+                                </code>
+                              );
+                            },
+                            pre({ children }) {
+                              const codeText = getNodeText(children).replace(/\n$/, '');
+                              const copyId = `${message.id}:${codeText}`;
+                              const language = getCodeLanguage(children);
+                              const isCodeCopied = copiedId === copyId;
+
+                              return (
+                                <div className="not-prose my-4 overflow-hidden rounded-xl border border-[#252d40]">
+                                  <div className="flex items-center justify-between border-b border-[#252d40] bg-[#111622] px-3 py-2">
+                                    <span className="font-mono text-[10px] uppercase text-slate-400">
+                                      {language}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleCopy(copyId, codeText)}
+                                      aria-label={isCodeCopied ? t.copied : t.copy}
+                                      title={isCodeCopied ? t.copied : t.copy}
+                                      className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[10px] text-slate-300 transition-colors hover:bg-slate-700/70 hover:text-white"
+                                    >
+                                      {isCodeCopied ? (
+                                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                      ) : (
+                                        <Copy className="h-3.5 w-3.5" />
+                                      )}
+                                      <span>{isCodeCopied ? t.copied : t.copy}</span>
+                                    </button>
+                                  </div>
+                                  <pre className="m-0 max-w-full overflow-x-auto bg-[#080b12] p-4 text-[12px] leading-6 sm:text-[13px]">
+                                    {children}
+                                  </pre>
+                                </div>
+                              );
+                            },
+                          }}
+                        >
                           {preprocessStreamingMarkdown(getMessageText(message))}
                         </ReactMarkdown>
                       </div>
